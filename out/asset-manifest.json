@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/static/css/main.ca595273.css",
+    "main.js": "/static/js/main.1388d1ee.js",
+    "static/media/MyWorkIn (Simbolo)(1).png": "/static/media/MyWorkIn (Simbolo)(1).cf990909f4882a7503a6.png",
+    "index.html": "/index.html",
+    "main.ca595273.css.map": "/static/css/main.ca595273.css.map",
+    "main.1388d1ee.js.map": "/static/js/main.1388d1ee.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ca595273.css",
+    "static/js/main.1388d1ee.js"
+  ]
+}

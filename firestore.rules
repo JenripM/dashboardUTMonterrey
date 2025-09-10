@@ -1,0 +1,21 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regla para la colección de usuarios
+    match /users/{userId} {
+      allow create: if request.auth != null && 
+                   request.auth.uid == userId &&
+                   request.resource.data.keys().hasAll(['email', 'createdAt', 'lastLogin', 'role', 'status', 'passwordLastChanged', 'passwordHistory']) &&
+                   request.resource.data.email is string &&
+                   request.resource.data.role is string &&
+                   request.resource.data.status is string;
+                   
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      
+      // Permitir que los administradores lean todos los usuarios
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+} 
