@@ -53,10 +53,9 @@ const Layout = ({ children }) => {
       ]
     },
     {
-      title: 'Cuenta',
+      title: 'Practicas',
       items: [
-        { name: 'Configuración', href: '/configuracion', icon: Cog6ToothIcon },
-        { name: 'Anuncios y Eventos', href: '/anuncios-eventos', icon: MegaphoneIcon },
+        { name: 'Convalidación', href: '/convalidacion', icon: UsersIcon },
       ]
     },
     {
@@ -67,9 +66,10 @@ const Layout = ({ children }) => {
       ]
     },
         {
-      title: 'Practicas',
+      title: 'Cuenta',
       items: [
-        { name: 'Convalidación', href: '/convalidacion', icon: UsersIcon },
+        { name: 'Configuración', href: '/configuracion', icon: Cog6ToothIcon },
+        { name: 'Anuncios y Eventos', href: '/anuncios-eventos', icon: MegaphoneIcon },
       ]
     },
   ];
