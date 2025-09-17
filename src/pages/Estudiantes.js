@@ -13,61 +13,68 @@ const Estudiantes = () => {
   const [statusFilter, setStatusFilter] = useState('Todos');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const loadEstudiantes = async () => {
-      try {
-        setLoading(true);
-        const usersData = await getUsersData();
+useEffect(() => {
+  const loadEstudiantes = async () => {
+    try {
+      setLoading(true);
+      const usersData = await getUsersData();
+      
+      // Procesar datos de usuarios con validación defensiva
+      const estudiantesData = usersData.map((user, index) => {
+        const nombre = user?.displayName || 'No especificado';
+        const carrera = user?.career || 'No especificado';
+        const telefono = user?.phone || 'No especificado';
+        const email = user?.email || 'No especificado';
+        const ciclo = user?.cycle || 'No especificado';
+        const estado = user?.status === 'active' ? 'Activo' : 
+                      user?.status === 'inactive' ? 'Inactivo' : 'No especificado';
         
-        // Procesar datos de usuarios con validación defensiva
-        const estudiantesData = usersData.map((user, index) => {
-          // Validar y procesar cada campo con fallbacks
-          const nombre = user?.displayName || 'No especificado';
-          const carrera = user?.career || 'No especificado';
-          const telefono = user?.phone || 'No especificado';
-          const email = user?.email || 'No especificado';
-          const ciclo = user?.cycle || 'No especificado';
-          const estado = user?.status === 'active' ? 'Activo' : 
-                        user?.status === 'inactive' ? 'Inactivo' : 'No especificado';
-          
-          // Procesar fecha de creación
-          let fecha = 'No especificado';
-          if (user?.createdAt) {
-            if (user.createdAt.toDate && typeof user.createdAt.toDate === 'function') {
-              // Firestore Timestamp
-              fecha = user.createdAt.toDate().toLocaleDateString('es-ES');
-            } else if (user.createdAt instanceof Date) {
-              // Date object
-              fecha = user.createdAt.toLocaleDateString('es-ES');
-            } else if (typeof user.createdAt === 'string') {
-              // String date
-              fecha = new Date(user.createdAt).toLocaleDateString('es-ES');
-            }
+        // Procesar fecha de creación
+        let fecha = 'No especificado';
+        if (user?.createdAt) {
+          if (user.createdAt.toDate && typeof user.createdAt.toDate === 'function') {
+            // Firestore Timestamp
+            fecha = user.createdAt.toDate().toLocaleDateString('es-ES');
+          } else if (user.createdAt instanceof Date) {
+            // Date object
+            fecha = user.createdAt.toLocaleDateString('es-ES');
+          } else if (typeof user.createdAt === 'string') {
+            // String date
+            fecha = new Date(user.createdAt).toLocaleDateString('es-ES');
           }
-          
-          return {
-            id: user?.id || index + 1,
-            nombre,
-            carrera,
-            telefono,
-            email,
-            ciclo,
-            fecha,
-            estado
-          };
-        });
+        }
         
-        setEstudiantes(estudiantesData);
-      } catch (err) {
-        console.error('Error cargando estudiantes:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+        return {
+          id: user?.id || index + 1,
+          nombre,
+          carrera,
+          telefono,
+          email,
+          ciclo,
+          fecha,
+          estado,
+          createdAt: user?.createdAt // Guarda el valor original de la fecha para ordenar
+        };
+      });
 
-    loadEstudiantes();
-  }, []);
+      // Ordenar estudiantes por la fecha de creación (más reciente primero)
+      estudiantesData.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return dateB - dateA; // Ordena de la más reciente a la más antigua
+      });
+
+      setEstudiantes(estudiantesData);
+    } catch (err) {
+      console.error('Error cargando estudiantes:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadEstudiantes();
+}, []);
 
   const handleExport = (selectedFields) => {
     // Here you would implement the CSV export logic
