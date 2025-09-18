@@ -1,7 +1,7 @@
 // Servicio para conexión a Firebase
 // Usa las instancias específicas según el tipo de datos
 
-import { collection, getCountFromServer, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getCountFromServer, getDocs, query, orderBy, where, Timestamp } from 'firebase/firestore';
 import { usersDb, jobsDb } from '../config/firebaseInstances';
 
 // Helper para obtener la base de datos correcta según la colección
@@ -67,6 +67,88 @@ export const getAIToolData = async (toolName) => {
 // Funciones específicas para cada colección
 export const getPracticasData = async () => {
   return await getCollectionData('practicas');
+};
+
+// Función para obtener prácticas de los últimos N días
+export const getPracticasDataLastDays = async (days = 5) => {
+  try {
+    console.log(`🔍 Consultando prácticas de los últimos ${days} días`);
+    
+    const db = jobsDb; // Proyecto Jobs
+    
+    if (!db) {
+      throw new Error('Base de datos Jobs no está inicializada');
+    }
+    
+    // Calcular la fecha de hace N días
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - days);
+    const fiveDaysAgoTimestamp = Timestamp.fromDate(fiveDaysAgo);
+    
+    console.log(`📅 Filtrando desde: ${fiveDaysAgo.toISOString()}`);
+    console.log(`🕐 Timestamp:`, fiveDaysAgoTimestamp);
+    
+    // Crear query con filtro de fecha usando el campo correcto
+    const { query: queryFn, where, getDocs, limit } = await import('firebase/firestore');
+    const collectionRef = collection(db, 'practicas');
+    
+    // Agregar límite para evitar consultas muy pesadas
+    const q = queryFn(
+      collectionRef, 
+      where('fecha_agregado', '>=', fiveDaysAgoTimestamp),
+      limit(100) // Límite de 100 documentos máximo
+    );
+    
+    console.log(`📡 Ejecutando consulta filtrada en Firestore...`);
+    const startTime = Date.now();
+    
+    // Agregar timeout de 10 segundos
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout: Consulta tardó más de 10 segundos')), 10000);
+    });
+    
+    const queryPromise = getDocs(q);
+    const snapshot = await Promise.race([queryPromise, timeoutPromise]);
+    
+    const endTime = Date.now();
+    console.log(`⏱️ Consulta completada en ${endTime - startTime}ms`);
+    
+    const data = [];
+    snapshot.forEach(doc => {
+      data.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    console.log(`✅ Prácticas obtenidas de los últimos ${days} días: ${data.length} documentos`);
+    if (data.length > 0) {
+      console.log(`📄 Primer documento:`, {
+        id: data[0].id,
+        fecha_agregado: data[0].fecha_agregado,
+        hasMetadata: !!data[0].metadata,
+        hasRequiredCompetencies: !!data[0].metadata?.required_competencies
+      });
+    }
+    return data;
+  } catch (error) {
+    console.error(`❌ Error obteniendo prácticas de los últimos ${days} días:`, error.message);
+    
+    // Si es timeout o error de consulta, usar fallback
+    if (error.message.includes('Timeout') || error.message.includes('index')) {
+      console.log(`🔄 Usando fallback: obtener todas las prácticas...`);
+      try {
+        const allPracticas = await getCollectionData('practicas');
+        console.log(`📊 Fallback: Obtenidas ${allPracticas.length} prácticas totales`);
+        return allPracticas;
+      } catch (fallbackError) {
+        console.error(`❌ Error en fallback:`, fallbackError.message);
+        throw fallbackError;
+      }
+    }
+    
+    throw error;
+  }
 };
 
 export const getCvAnalysisData = async () => {

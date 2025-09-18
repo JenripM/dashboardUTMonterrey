@@ -19,7 +19,11 @@ const AreasOfInterestChart = () => {
       try {
         setLoading(true);
         const data = await getAreasOfInterest();
-        setAreasInteres(data);
+        // Filtrar áreas que contengan "error" en el nombre (case insensitive)
+        const filteredData = data.filter(area => 
+          !area.name.toLowerCase().includes('error')
+        );
+        setAreasInteres(filteredData);
       } catch (err) {
         console.error('Error cargando áreas de interés:', err);
         setError(err.message);
@@ -83,11 +87,23 @@ const AreasOfInterestChart = () => {
     );
   }
 
+  // Calcular altura dinámica basada en el número de áreas
+  const getChartHeight = () => {
+    const baseHeight = 300;
+    const minHeight = 250;
+    const maxHeight = 600;
+    const legendItemHeight = 20;
+    const extraSpace = 50;
+    
+    const calculatedHeight = baseHeight + (areasInteres.length * legendItemHeight) + extraSpace;
+    return Math.max(minHeight, Math.min(maxHeight, calculatedHeight));
+  };
+
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <h2 className="text-lg font-medium text-gray-900">Áreas de Interés</h2>
       <p className="mt-1 text-sm text-gray-500">Distribución de intereses profesionales de los estudiantes</p>
-      <div className="mt-6" style={{ height: '400px' }}>
+      <div className="mt-6 overflow-hidden" style={{ height: `${getChartHeight()}px` }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -99,7 +115,7 @@ const AreasOfInterestChart = () => {
               innerRadius="45%"
               outerRadius="80%"
               dataKey="value"
-              paddingAngle={3}
+              paddingAngle={1}
               strokeWidth={2}
               stroke="#ffffff"
             >
@@ -124,7 +140,9 @@ const AreasOfInterestChart = () => {
               align="right"
               verticalAlign="middle"
               wrapperStyle={{
-                paddingLeft: '20px'
+                paddingLeft: '20px',
+                maxHeight: '100%',
+                overflow: 'auto'
               }}
               formatter={(value, entry, index) => (
                 <span style={{ 

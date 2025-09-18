@@ -342,7 +342,8 @@ const CompetenciasAgrupadasChart = () => {
         <ul className="text-sm text-gray-600 space-y-1">
           <li>• <span className="text-orange-600 font-medium">Barras naranjas:</span> Porcentaje de ofertas que requieren esta competencia</li>
           <li>• <span className="text-green-800 font-medium">Barras verdes:</span> Porcentaje de usuarios que tienen esta competencia</li>
-          <li>• <span className="text-gray-600 font-medium">Filtro:</span> Se aplica el filtro por área seleccionada (sincronizado con ambos gráficos)</li>
+          <li>• <span className="text-gray-600 font-medium">Filtro temporal:</span> Solo se analizan ofertas de los últimos 5 días para optimizar rendimiento</li>
+          <li>• <span className="text-gray-600 font-medium">Filtro por área:</span> Se aplica el filtro por área seleccionada (sincronizado con ambos gráficos)</li>
         </ul>
       </div>
 
@@ -413,7 +414,8 @@ const CompetenciasAgrupadasChart = () => {
           <h4 className="text-sm font-medium text-gray-800 mb-2">Interpretación del gráfico de cuellos de botella:</h4>
           <ul className="text-sm text-gray-600 space-y-1">
             <li>• <span className="text-red-600 font-medium">Barras rojas:</span> Competencias con mayor escasez en el mercado</li>
-            <li>• <span className="text-gray-600 font-medium">Filtro:</span> Se aplica el filtro por área seleccionada (sincronizado con ambos gráficos)</li>
+            <li>• <span className="text-gray-600 font-medium">Filtro temporal:</span> Solo se analizan ofertas de los últimos 5 días para optimizar rendimiento</li>
+            <li>• <span className="text-gray-600 font-medium">Filtro por área:</span> Se aplica el filtro por área seleccionada (sincronizado con ambos gráficos)</li>
           </ul>
         </div>
       </div>

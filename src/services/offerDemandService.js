@@ -1,5 +1,5 @@
 // Servicio para análisis de oferta vs demanda de competencias
-import { getPracticasData, getUsersData } from './firebaseService';
+import { getPracticasData, getPracticasDataLastDays, getUsersData } from './firebaseService';
 import { cacheService } from './cacheService';
 
 /**
@@ -148,6 +148,22 @@ export const analyzeOfferDemandFromData = (practicasData, usersData, targetField
         Array.isArray(practica.metadata.required_competencies) &&
         practica.metadata.required_competencies.includes(competency);
     }).length;
+    
+    // Debug: Log para las primeras competencias
+    if (competency === Array.from(allCompetencies)[0]) {
+      console.log('🔍 Debug primera competencia:', competency);
+      console.log('📊 Total practicas filtradas:', filteredPracticas.length);
+      console.log('🎯 Offer count para', competency, ':', offerCount);
+      if (filteredPracticas.length > 0) {
+        console.log('📋 Estructura de primera practica:', {
+          hasMetadata: !!filteredPracticas[0]?.metadata,
+          hasRequiredCompetencies: !!filteredPracticas[0]?.metadata?.required_competencies,
+          competenciesType: typeof filteredPracticas[0]?.metadata?.required_competencies,
+          competenciesLength: Array.isArray(filteredPracticas[0]?.metadata?.required_competencies) ? filteredPracticas[0].metadata.required_competencies.length : 'N/A',
+          firstCompetencies: Array.isArray(filteredPracticas[0]?.metadata?.required_competencies) ? filteredPracticas[0].metadata.required_competencies.slice(0, 3) : 'N/A'
+        });
+      }
+    }
     
     // Contar en usuarios - con validación defensiva
     const demandCount = filteredUsers.filter(user => {
@@ -406,14 +422,15 @@ export const getFieldsAndAnalysis = async () => {
 /**
  * Obtiene campos disponibles, análisis completo Y raw data en una sola llamada
  * Solo usar cuando se necesite filtrado local (para evitar llamadas adicionales)
+ * Usa prácticas de los últimos 5 días para optimizar rendimiento
  */
 export const getFieldsAnalysisAndRawData = async () => {
-  const cacheKey = 'fields_analysis_raw_data';
+  const cacheKey = 'fields_analysis_raw_data_last5days';
   
   // 1. Verificar caché primero
   const cached = cacheService.getMetrics(cacheKey);
   if (cached) {
-    console.log('📦 Usando caché para fields_analysis_raw_data');
+    console.log('📦 Usando caché para fields_analysis_raw_data_last5days');
     console.log('🔍 Caché contiene fieldAnalyses:', !!cached.fieldAnalyses);
     
     // Si el caché no tiene fieldAnalyses, es un caché antiguo, lo limpiamos
@@ -430,10 +447,34 @@ export const getFieldsAnalysisAndRawData = async () => {
   }
 
   try {
+    console.log('🕒 Obteniendo prácticas de los últimos 5 días...');
     const [practicasData, usersData] = await Promise.all([
-      getPracticasData(),
+      getPracticasDataLastDays(5), // Solo prácticas de los últimos 5 días
       getUsersData()
     ]);
+    
+    console.log('📊 Datos obtenidos:');
+    console.log('🏢 Prácticas (últimos 5 días):', practicasData.length);
+    console.log('👥 Usuarios:', usersData.length);
+    
+    // Debug: Verificar estructura de datos de prácticas
+    if (practicasData.length > 0) {
+      console.log('🔍 Estructura de primera práctica:', {
+        id: practicasData[0].id,
+        hasMetadata: !!practicasData[0].metadata,
+        hasRequiredCompetencies: !!practicasData[0].metadata?.required_competencies,
+        competenciesType: typeof practicasData[0].metadata?.required_competencies,
+        competenciesLength: Array.isArray(practicasData[0].metadata?.required_competencies) ? practicasData[0].metadata.required_competencies.length : 'N/A',
+        sampleCompetencies: Array.isArray(practicasData[0].metadata?.required_competencies) ? practicasData[0].metadata.required_competencies.slice(0, 3) : 'N/A',
+        fecha_agregado: practicasData[0].fecha_agregado
+      });
+    } else {
+      console.log('⚠️ No hay prácticas de los últimos 5 días - usando todas las prácticas como fallback');
+      // Fallback: usar todas las prácticas si no hay datos recientes
+      const allPracticasData = await getPracticasData();
+      practicasData.push(...allPracticasData);
+      console.log('📊 Total prácticas (fallback):', practicasData.length);
+    }
     
     const fields = getAvailableFieldsFromData(practicasData, usersData);
     const allAnalysis = analyzeOfferDemandFromData(practicasData, usersData, null);
@@ -569,8 +610,9 @@ export const getAvailableFieldsFromData = (practicasData, usersData) => {
 };
 
 // Función específica para OfertasPorCampoTreemap - solo datos del treemap
+// Usa prácticas de los últimos 5 días para optimizar rendimiento
 export const getTreemapData = async () => {
-  const cacheKey = 'treemap_data';
+  const cacheKey = 'treemap_data_last5days';
   
   // Intentar obtener del caché
   const cached = cacheService.getMetrics(cacheKey);
@@ -579,7 +621,8 @@ export const getTreemapData = async () => {
   }
 
   try {
-    const practicasData = await getPracticasData();
+    console.log('🕒 Obteniendo prácticas de los últimos 5 días para treemap...');
+    const practicasData = await getPracticasDataLastDays(5);
     
     // Agrupar ofertas por target_field - excluyendo "No especificado"
     const fieldCounts = {};
