@@ -1,37 +1,34 @@
-import { useMemo, useState } from 'react';
-
-const initialCompanies = [
-  {
-    id: 'comp-1',
-    name: 'TechNova S.A.C.',
-    industry: 'Software y Tecnología',
-    contact: 'talento@technova.pe',
-    size: '200-500',
-    note: 'Buscan practicantes de Ingeniería de Sistemas y carrera afín.',
-    status: 'pending',
-    createdAt: '2025-09-05',
-  },
-  {
-    id: 'comp-2',
-    name: 'Andes Retail Group',
-    industry: 'Retail',
-    contact: 'rrhh@andesretail.com',
-    size: '1000+',
-    note: 'Programa trainee en logística y data analytics.',
-    status: 'pending',
-    createdAt: '2025-09-10',
-  },
-];
+import { useMemo, useState, useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db2 } from '../credentials/companies'; // Asegúrate que la ruta sea correcta
 
 const statusStyles = {
   pending: 'bg-yellow-50 text-yellow-700 ring-yellow-600/20',
   approved: 'bg-green-50 text-green-700 ring-green-600/20',
   rejected: 'bg-red-50 text-red-700 ring-red-600/20',
+  active: 'bg-blue-50 text-blue-700 ring-blue-600/20', // Añadí un estilo para 'active'
 };
 
 const Empresas = () => {
-  const [companies, setCompanies] = useState(initialCompanies);
+  const [companies, setCompanies] = useState([]);
   const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db2, 'companies'));
+        const companiesList = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setCompanies(companiesList);
+      } catch (error) {
+        console.error("Error fetching companies: ", error);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return companies;
@@ -39,6 +36,8 @@ const Empresas = () => {
   }, [companies, filter]);
 
   const updateStatus = (id, status) => {
+    // Nota: Esta función solo actualiza el estado local.
+    // Para persistir el cambio, necesitarías actualizar el documento en Firestore.
     setCompanies((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
   };
 
@@ -61,6 +60,7 @@ const Empresas = () => {
             <option value="pending">Pendientes</option>
             <option value="approved">Aceptadas</option>
             <option value="rejected">Rechazadas</option>
+            <option value="active">Activas</option>
           </select>
         </div>
       </div>
@@ -78,18 +78,19 @@ const Empresas = () => {
         {filtered.map((c) => (
           <div key={c.id} className="grid grid-cols-12 gap-4 px-4 py-4 border-b last:border-b-0 items-center">
             <div className="col-span-4">
-              <div className="font-medium text-gray-900">{c.name}</div>
-              <div className="text-sm text-gray-500">{c.note}</div>
-              <div className="text-xs text-gray-400 mt-1">Desde {c.createdAt}</div>
+              <div className="font-medium text-gray-900">{c.displayName}</div>
+              <div className="text-sm text-gray-500">{c.description}</div>
+              <div className="text-xs text-gray-400 mt-1">
+                Desde{' '}
+                {c.createdAt?.toDate ? c.createdAt.toDate().toLocaleDateString() : 'N/A'}
+              </div>
             </div>
-            <div className="col-span-2 text-gray-700">{c.industry}</div>
-            <div className="col-span-2 text-blue-600">{c.contact}</div>
-            <div className="col-span-1 text-gray-700">{c.size}</div>
+            <div className="col-span-2 text-gray-700">{c.sector}</div>
+            <div className="col-span-2 text-blue-600">{c.contactEmail}</div>
+            <div className="col-span-1 text-gray-700">{c.companySize}</div>
             <div className="col-span-1">
-              <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs ring-1 ${statusStyles[c.status]}`}>
-                {c.status === 'pending' && 'Pendiente'}
-                {c.status === 'approved' && 'Aceptada'}
-                {c.status === 'rejected' && 'Rechazada'}
+              <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ring-1 ${statusStyles[c.status] || statusStyles.pending}`}>
+                {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
               </span>
             </div>
             <div className="col-span-2 flex justify-end space-x-2">
@@ -115,4 +116,4 @@ const Empresas = () => {
   );
 };
 
-export default Empresas; 
+export default Empresas;
