@@ -2,7 +2,7 @@
   "name": "universidad-dashboard",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:3000",
+  "proxy": "https://www.myworkin.pe",
   "dependencies": {
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.1.1",
