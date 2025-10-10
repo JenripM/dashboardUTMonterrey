@@ -2,7 +2,8 @@
   "name": "universidad-dashboard",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://www.myworkin.pe",
+  
+  "proxy": "https://template-my-worki-ucal.vercel.app",
   "dependencies": {
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.1.1",
