@@ -21,5 +21,4 @@ export const jobsDb = getFirestore(jobsApp);
 const usersApp = initializeApp(usersCredentials, 'users');
 export const usersDb = getFirestore(usersApp);
 
-// Exportar por defecto la instancia de dashboard para compatibilidad
 export default dashboardApp;
