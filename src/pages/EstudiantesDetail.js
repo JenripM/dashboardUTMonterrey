@@ -59,14 +59,7 @@ const EstudiantesDetail = () => {
           orderBy("createdAt", "desc"),
           limit(1)
         );
-        const cvsSnap = await getDocs(q);
-        if (!cvsSnap.empty) {
-          const latestCV = cvsSnap.docs[0].data();
-          setCvData(latestCV);
-        } else {
-          setCvData(null);
-        }
-
+    
         // 3) Obtener datos de la colección "aiTool_cvAnalysis" con el userId
         const aiToolRef = collection(usersDb, "aiTool_cvAnalysis");
         const aiToolQuery = query(aiToolRef, where("userId", "==", id));
