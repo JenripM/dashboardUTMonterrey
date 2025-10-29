@@ -3,12 +3,12 @@ import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
- apiKey: "AIzaSyCGho61t7dnDpz8SnK6xMzkYcG0PiUdxV4",
-  authDomain: "pruebatemplatemyworkin.firebaseapp.com",
-  projectId: "pruebatemplatemyworkin",
-  storageBucket: "pruebatemplatemyworkin.firebasestorage.app",
-  messagingSenderId: "584052266739",
-  appId: "1:584052266739:web:0bc7060b18200e6ed70986"
+  apiKey: "AIzaSyDjxeFgFp71SDg-aafSy0ynQiSsHdkiomM",
+  authDomain: "ulima-template.firebaseapp.com",
+  projectId: "ulima-template",
+  storageBucket: "ulima-template.firebasestorage.app",
+  messagingSenderId: "717193047007",
+  appId: "1:717193047007:web:0e9638c47c769a7b24326a"
 };
 
 const app = initializeApp(firebaseConfig);
