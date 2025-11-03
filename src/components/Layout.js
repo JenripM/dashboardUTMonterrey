@@ -5,7 +5,7 @@ import MyWorkInLogo from '../assets/images/MyWorkIn (Simbolo)(1).png';
 // Importar logos de universidades
 import UlimaLogo from '../assets/images/ulima.webp';
 import UtmonterreyLogo from '../assets/images/utmonterrey.webp';
-import AliatLogo from '../assets/images/ualiat.webp';
+import AliatLogo from '../assets/images/aliat.webp';
 import {
   UserGroupIcon,
   QuestionMarkCircleIcon,
@@ -21,12 +21,10 @@ import {
   ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 
-// Mapeo de acrónimos a logos de universidades
 const universityLogos = {
   ulima: UlimaLogo,
   utmonterrey: UtmonterreyLogo,
   aliat: AliatLogo,
-  // Agregar más universidades aquí cuando sea necesario
 };
 
 const Layout = ({ children }) => {
@@ -35,7 +33,6 @@ const Layout = ({ children }) => {
   const { currentUser, logout } = useAuth();
   const [userEmail] = useState(currentUser?.email || '');
 
-  // Obtener el acrónimo de la universidad desde las variables de entorno
   const acronimoUniversidad = process.env.REACT_APP_ACRONIMO_UNIVERSIDAD;
   
   // Obtener el logo según el acrónimo, o usar el logo por defecto de MyWorkIn
