@@ -25,7 +25,7 @@ import {
 const universityLogos = {
   ulima: UlimaLogo,
   utmonterrey: UtmonterreyLogo,
-  aliat: UAliatLogo,
+  aliat: AliatLogo,
   // Agregar más universidades aquí cuando sea necesario
 };
 
