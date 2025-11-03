@@ -16,6 +16,7 @@ import AnunciosEventos from "./pages/AnunciosEventos";
 import Asesoria from "./pages/Asesoria";
 import Usuarios from "./pages/Usuarios";
 import Empresas from "./pages/Empresas";
+import EmpresasDetail from "./pages/EmpresasDetail";
 import Login from "./pages/Login";
 import EstudiantesDetail from "./pages/EstudiantesDetail";
 import Convalidacion from "./pages/Convalidacion";
@@ -72,6 +73,7 @@ function App() {
                     <Route path="/anuncios-eventos" element={<AnunciosEventos />} />
                     <Route path="/usuarios" element={<Usuarios />} />
                     <Route path="/empresas" element={<Empresas />} />
+                    <Route path="/empresas/:id" element={<EmpresasDetail />} />
                     <Route path="/convalidacion" element={<Convalidacion />} />
                     <Route
                       path="/convalidacion/:id"

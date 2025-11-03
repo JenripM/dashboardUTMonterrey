@@ -8,8 +8,17 @@ import dashboardCredentials from '../credentials/firebase_dashboard_credentials.
 import jobsCredentials from '../credentials/firebase_jobs_credentials.json';
 
 // Credenciales de users - import dinámico basado en acrónimo
+//const credentialsAcronym = process.env.REACT_APP_FIREBASE_CREDENTIALS_ACRONYM || 'ulima';
+//const usersCredentials = require(`../credentials/firebase_credentials_${credentialsAcronym}.json`);
+
 const credentialsAcronym = process.env.REACT_APP_FIREBASE_CREDENTIALS_ACRONYM || 'ulima';
-const usersCredentials = require(`../credentials/firebase_credentials_${credentialsAcronym}.json`);
+
+let usersCredentials;
+if (credentialsAcronym === 'users') {
+  usersCredentials = require('../credentials/firebase_users_credentials.json');
+} else {
+  usersCredentials = require(`../credentials/firebase_credentials_${credentialsAcronym}.json`);
+}
 
 // Instancia para Dashboard (login/auth de administradores)
 const dashboardApp = initializeApp(dashboardCredentials, 'dashboard');

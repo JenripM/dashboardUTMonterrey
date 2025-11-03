@@ -1,7 +1,9 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db2 } from '../credentials/companies';
 import * as XLSX from 'xlsx'; // Asegúrate de instalar esta librería: npm install xlsx
+import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 const statusStyles = {
   pending: 'bg-yellow-50 text-yellow-700 ring-yellow-600/20',
@@ -11,6 +13,7 @@ const statusStyles = {
 };
 
 const Empresas = () => {
+  const navigate = useNavigate();
   const [companies, setCompanies] = useState([]);
   const [filter, setFilter] = useState('all');
   const [uploadModal, setUploadModal] = useState(false);
@@ -19,6 +22,11 @@ const Empresas = () => {
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState('');
   const fileInputRef = useRef(null);
+  
+  // Nuevos estados para filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [industryFilter, setIndustryFilter] = useState('all');
+  const [sizeFilter, setSizeFilter] = useState('all');
 
   useEffect(() => {
     fetchCompanies();
@@ -38,9 +46,52 @@ const Empresas = () => {
   };
 
   const filtered = useMemo(() => {
-    if (filter === 'all') return companies;
-    return companies.filter((c) => c.status === filter);
-  }, [companies, filter]);
+    let result = companies;
+    
+    // Filtrar por estado
+    if (filter !== 'all') {
+      result = result.filter((c) => c.status === filter);
+    }
+    
+    // Filtrar por búsqueda (nombre, email, descripción)
+    if (searchTerm) {
+      result = result.filter((c) => 
+        c.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.contactEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Filtrar por industria
+    if (industryFilter !== 'all') {
+      result = result.filter((c) => c.sector === industryFilter);
+    }
+    
+    // Filtrar por tamaño
+    if (sizeFilter !== 'all') {
+      result = result.filter((c) => c.companySize === sizeFilter);
+    }
+    
+    return result;
+  }, [companies, filter, searchTerm, industryFilter, sizeFilter]);
+  
+  // Obtener listas únicas para los filtros
+  const industries = useMemo(() => {
+    const unique = [...new Set(companies.map(c => c.sector).filter(Boolean))];
+    return unique.sort();
+  }, [companies]);
+  
+  const sizes = useMemo(() => {
+    const unique = [...new Set(companies.map(c => c.companySize).filter(Boolean))];
+    return unique.sort();
+  }, [companies]);
+  
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilter('all');
+    setIndustryFilter('all');
+    setSizeFilter('all');
+  };
 
   const updateStatus = async (id, status) => {
     try {
@@ -412,7 +463,7 @@ const Empresas = () => {
         </div>
       )}
 
-      {/* Header y controles */}
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Empresas</h1>
@@ -420,45 +471,153 @@ const Empresas = () => {
             Gestiona solicitudes de conexión de empresas empleadoras
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setUploadModal(true)}
-            className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 flex items-center"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            Subir Empresas
-          </button>
-          
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white"
-          >
-            <option value="all">Todas</option>
-            <option value="pending">Pendientes</option>
-            <option value="approved">Aceptadas</option>
-            <option value="rejected">Rechazadas</option>
-            <option value="active">Activas</option>
-          </select>
+        <button
+          onClick={() => setUploadModal(true)}
+          className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 flex items-center shadow-md hover:shadow-lg transition-all"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          Subir Empresas
+        </button>
+      </div>
+
+      {/* Barra de búsqueda y filtros */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Barra de búsqueda */}
+          <div className="flex-1 relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar empresas por nombre, industria o contacto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-sm"
+            />
+          </div>
+
+          {/* Filtros */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <FunnelIcon className="w-5 h-5" />
+              <span className="font-medium">Filtros:</span>
+            </div>
+
+            {/* Filtro de Estado */}
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white hover:border-primary focus:ring-2 focus:ring-primary focus:border-primary transition-all min-w-[140px]"
+            >
+              <option value="all">Todas</option>
+              <option value="pending">Pendientes</option>
+              <option value="approved">Aceptadas</option>
+              <option value="rejected">Rechazadas</option>
+              <option value="active">Activas</option>
+            </select>
+
+            {/* Filtro de Industria */}
+            <select
+              value={industryFilter}
+              onChange={(e) => setIndustryFilter(e.target.value)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white hover:border-primary focus:ring-2 focus:ring-primary focus:border-primary transition-all min-w-[160px]"
+            >
+              <option value="all">Todas las industrias</option>
+              {industries.map((industry) => (
+                <option key={industry} value={industry}>
+                  {industry}
+                </option>
+              ))}
+            </select>
+
+            {/* Filtro de Tamaño */}
+            <select
+              value={sizeFilter}
+              onChange={(e) => setSizeFilter(e.target.value)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white hover:border-primary focus:ring-2 focus:ring-primary focus:border-primary transition-all min-w-[160px]"
+            >
+              <option value="all">Todos los tamaños</option>
+              {sizes.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+
+            {/* Botón limpiar filtros */}
+            {(searchTerm || filter !== 'all' || industryFilter !== 'all' || sizeFilter !== 'all') && (
+              <button
+                onClick={clearFilters}
+                className="text-sm text-gray-600 hover:text-primary font-medium flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-50 transition-all"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mostrar resultados */}
+        <div className="mt-3 flex items-center justify-between text-sm">
+          <p className="text-gray-600">
+            Mostrando <span className="font-semibold text-gray-900">{filtered.length}</span> de{' '}
+            <span className="font-semibold text-gray-900">{companies.length}</span> empresas
+          </p>
+          {(searchTerm || filter !== 'all' || industryFilter !== 'all' || sizeFilter !== 'all') && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {searchTerm && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs">
+                  Búsqueda: "{searchTerm}"
+                  <button onClick={() => setSearchTerm('')} className="hover:text-blue-900">
+                    <XMarkIcon className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {filter !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs">
+                  Estado: {filter}
+                  <button onClick={() => setFilter('all')} className="hover:text-blue-900">
+                    <XMarkIcon className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {industryFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs">
+                  Industria: {industryFilter}
+                  <button onClick={() => setIndustryFilter('all')} className="hover:text-blue-900">
+                    <XMarkIcon className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {sizeFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs">
+                  Tamaño: {sizeFilter}
+                  <button onClick={() => setSizeFilter('all')} className="hover:text-blue-900">
+                    <XMarkIcon className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Resto del componente permanece igual */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
         <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b text-xs font-medium text-gray-500">
-          <div className="col-span-4">Empresa</div>
+          <div className="col-span-3">Empresa</div>
           <div className="col-span-2">Industria</div>
           <div className="col-span-2">Contacto</div>
           <div className="col-span-1">Tamaño</div>
           <div className="col-span-1">Estado</div>
           <div className="col-span-2 text-right">Acciones</div>
+          <div className="col-span-1 text-center">Ver más</div>
         </div>
 
         {filtered.map((c) => (
-          <div key={c.id} className="grid grid-cols-12 gap-4 px-4 py-4 border-b last:border-b-0 items-center">
-            <div className="col-span-4">
+          <div key={c.id} className="grid grid-cols-12 gap-4 px-4 py-4 border-b last:border-b-0 items-center hover:bg-gray-50 transition-colors">
+            <div className="col-span-3">
               <div className="font-medium text-gray-900">{c.displayName}</div>
               <div className="text-sm text-gray-500">{c.description}</div>
               <div className="text-xs text-gray-400 mt-1">
@@ -477,17 +636,26 @@ const Empresas = () => {
             <div className="col-span-2 flex justify-end space-x-2">
               <button
                 onClick={() => updateStatus(c.id, 'active')}
-                className="px-3 py-1 text-sm rounded-md border border-green-600 text-green-700 hover:bg-green-50 disabled:opacity-50"
+                className="px-3 py-1 text-sm rounded-md border border-green-600 text-green-700 hover:bg-green-50 disabled:opacity-50 transition-colors"
                 disabled={c.status === 'active'}
               >
                 Aceptar
               </button>
               <button
                 onClick={() => updateStatus(c.id, 'rejected')}
-                className="px-3 py-1 text-sm rounded-md border border-red-600 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                className="px-3 py-1 text-sm rounded-md border border-red-600 text-red-700 hover:bg-red-50 disabled:opacity-50 transition-colors"
                 disabled={c.status === 'rejected'}
               >
                 Rechazar
+              </button>
+            </div>
+            <div className="col-span-1 flex justify-center">
+              <button
+                onClick={() => navigate(`/empresas/${c.id}`)}
+                className="p-2 text-gray-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-all duration-200 group"
+                title="Ver más detalles"
+              >
+                <ChevronRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           </div>
