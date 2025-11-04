@@ -34,7 +34,7 @@ const Layout = ({ children }) => {
   const [userEmail] = useState(currentUser?.email || '');
 
   // Obtener el acrónimo de la universidad desde las variables de entorno
-  const acronimoUniversidad = process.env.REACT_APP_ACRONIMO_UNIVERSIDAD;
+  const acronimoUniversidad = utmonterrey;
   
   // Obtener el logo según el acrónimo, o usar el logo por defecto de MyWorkIn
   const logo = acronimoUniversidad && universityLogos[acronimoUniversidad] 

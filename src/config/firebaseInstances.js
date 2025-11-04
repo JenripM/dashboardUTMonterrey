@@ -11,7 +11,7 @@ import jobsCredentials from '../credentials/firebase_jobs_credentials.json';
 //const credentialsAcronym = process.env.REACT_APP_FIREBASE_CREDENTIALS_ACRONYM || 'ulima';
 //const usersCredentials = require(`../credentials/firebase_credentials_${credentialsAcronym}.json`);
 
-const credentialsAcronym = process.env.REACT_APP_FIREBASE_CREDENTIALS_ACRONYM || 'ulima';
+const credentialsAcronym = process.env.REACT_APP_FIREBASE_CREDENTIALS_ACRONYM || 'users';
 
 let usersCredentials;
 if (credentialsAcronym === 'users') {
